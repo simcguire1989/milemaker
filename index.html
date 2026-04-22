@@ -423,7 +423,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
       <input class="pw-input" type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPw()">
       <button class="pw-eye" onclick="togglePwVis()" id="pw-eye-btn" title="Show/hide">👁</button>
     </div>
-    <div class="pw-error" id="pw-error">Incorrect password. Try again.</div>
+    <div class="pw-error" id="pw-error"></div>
     <button class="pw-btn" onclick="checkPw()">Enter →</button>
     <div class="pw-footer">milemaker.app &nbsp;·&nbsp; Private demo</div>
   </div>
@@ -1062,7 +1062,7 @@ function exportCSV() {
   ]);
   const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([\`\uFEFF${csv}\`,{type:'text/csv;charset=utf-8;'}]));
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download=`milemaker_report_${S.start}_to_${S.end}.csv`;
   a.click();
   toast('📄 CSV downloaded — open in Excel or Google Sheets!');
@@ -1100,43 +1100,46 @@ function toast(msg){const el=document.getElementById('toast-el');el.textContent=
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('app-overlay').classList.contains('open'))closeApp();});
 
 // ══ PASSWORD GATE ══
-const PW_HASH = '8e3c2c7b4f1d9a6e5b0f2c8d3a7e1b4f'; // md5-like placeholder — we use simple compare below
-const DEMO_PASSWORD = 'milemaker2026'; // Change this to your desired password
+const DEMO_PASSWORD = 'milemaker2026'; // ← change this to set your password
 
 function checkPw() {
-  const input = document.getElementById('pw-input').value;
-  const errEl = document.getElementById('pw-error');
+  var input = document.getElementById('pw-input').value.trim();
+  var errEl = document.getElementById('pw-error');
+  var gate  = document.getElementById('pw-gate');
   if (input === DEMO_PASSWORD) {
-    document.getElementById('pw-gate').classList.add('unlocked');
-    sessionStorage.setItem('mm_auth', 'true');
+    gate.classList.add('unlocked');
+    try { sessionStorage.setItem('mm_auth','true'); } catch(e){}
     errEl.textContent = '';
   } else {
-    errEl.textContent = 'Incorrect password. Try again.';
-    const inp = document.getElementById('pw-input');
+    errEl.textContent = 'Incorrect password — try again.';
+    var inp = document.getElementById('pw-input');
     inp.classList.remove('shake');
-    void inp.offsetWidth; // reflow to restart animation
+    void inp.offsetWidth;
     inp.classList.add('shake');
-    inp.select();
+    inp.value = '';
+    inp.focus();
   }
 }
 
 function togglePwVis() {
-  const inp = document.getElementById('pw-input');
-  const btn = document.getElementById('pw-eye-btn');
+  var inp = document.getElementById('pw-input');
+  var btn = document.getElementById('pw-eye-btn');
   if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
   else { inp.type = 'password'; btn.textContent = '👁'; }
 }
 
 // Auto-unlock if already authenticated this session
-if (sessionStorage.getItem('mm_auth') === 'true') {
-  document.getElementById('pw-gate').classList.add('unlocked');
-}
+try {
+  if (sessionStorage.getItem('mm_auth') === 'true') {
+    document.getElementById('pw-gate').classList.add('unlocked');
+  }
+} catch(e) {}
 
-// Focus password input on load
-window.addEventListener('load', () => {
-  const gate = document.getElementById('pw-gate');
+// Focus input on load
+window.addEventListener('load', function() {
+  var gate = document.getElementById('pw-gate');
   if (!gate.classList.contains('unlocked')) {
-    document.getElementById('pw-input').focus();
+    setTimeout(function(){ document.getElementById('pw-input').focus(); }, 100);
   }
 });
 </script>
