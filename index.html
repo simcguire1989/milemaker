@@ -568,11 +568,12 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
       <div class="diff-title">Calendar-first.<br>Nothing to turn on.</div>
       <p class="diff-body">Verimile reads your Google Calendar retroactively. No app to remember, no timer to start, no drive to classify. If a meeting was on your calendar, it's in your report. Verified.</p>
     </div>
-    <div class="diff-card">
+    <div class="diff-card" style="position:relative;">
+      <div style="position:absolute;top:1rem;right:1rem;font-size:.6rem;font-weight:700;background:#f3f0eb;color:#a0927a;border:1.5px solid #e0d9cc;border-radius:99px;padding:2px 8px;letter-spacing:.04em;">COMING SOON</div>
       <div class="diff-num">02 —</div>
       <span class="diff-icon">🟠</span>
       <div class="diff-title">CRM-verified.<br>Every mile proven.</div>
-      <p class="diff-body">Connecting HubSpot means every trip in your report is matched to a real contact, deal, or meeting in your CRM. Not just your word against a spreadsheet — actual documented proof that the meeting happened.</p>
+      <p class="diff-body">When CRM integration launches, every trip will be matched to a real contact, deal, or meeting record. Not just your word against a spreadsheet — actual documented proof that the meeting happened. Pending compliance approval.</p>
     </div>
     <div class="diff-card">
       <div class="diff-num">03 —</div>
@@ -617,11 +618,14 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
       <div class="split-title">Every trip is<br><em>verified</em>, not just logged.</div>
       <div class="split-body">
         <p>When you submit a mileage report, someone on your team has to approve it. Traditionally, that means taking your word for it.</p>
-        <p>Verimile's HubSpot integration changes that. Every trip in your report is matched against a real CRM record — the contact you met with, the deal it was tied to, the activity logged in your pipeline. Your finance team gets a report they can actually trust. You get approved faster.</p>
-        <p>It's not just mileage tracking. It's audit-ready documentation.</p>
+        <p>With CRM integration (coming soon, pending compliance approval), every trip can be matched against a real CRM record — the contact you met with, the deal it was tied to, the activity logged in your pipeline. Your finance team gets a report they can actually trust. You get approved faster.</p>
+        <p>Not just mileage tracking. Audit-ready documentation.</p>
       </div>
     </div>
-    <div class="split-visual">
+    <div class="split-visual" style="opacity:.6;filter:blur(1px);pointer-events:none;user-select:none;position:relative;">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;opacity:1;filter:none;">
+        <div style="background:white;border:2px solid #e0d9cc;border-radius:12px;padding:.65rem 1.2rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;font-weight:700;color:#a0927a;letter-spacing:.04em;box-shadow:0 4px 16px rgba(26,23,20,.08);">🔒 Coming Soon — Pending Approval</div>
+      </div>
       <div class="vis-row"><div class="vis-icon">🟠</div><div class="vis-text"><div class="vis-title">HubSpot: Meeting logged</div><div class="vis-sub">Pablo Garza · Fattoria E Mare · Deal stage: Demo</div></div><span class="vis-badge vb-green">Verified</span></div>
       <div class="vis-row"><div class="vis-icon">🟠</div><div class="vis-text"><div class="vis-title">HubSpot: Meeting logged</div><div class="vis-sub">Sara Kim · Westlake Coffee · Deal stage: Proposal</div></div><span class="vis-badge vb-green">Verified</span></div>
       <div class="vis-row"><div class="vis-icon">🟠</div><div class="vis-text"><div class="vis-title">HubSpot: Meeting logged</div><div class="vis-sub">Natale Russo · Servino Ristorante · Deal stage: Closed Won</div></div><span class="vis-badge vb-green">Verified</span></div>
@@ -644,7 +648,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
     </div>
     <div class="compare-row"><div class="cr-cell label">Nothing to turn on or remember</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Requires app to be running</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;Reads your calendar retroactively</div></div>
     <div class="compare-row"><div class="cr-cell label">No personal trips logged</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Tracks every drive, personal included</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;Only calendar meetings, nothing else</div></div>
-    <div class="compare-row"><div class="cr-cell label">CRM-verified trips</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Self-reported only</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;Matched to HubSpot records</div></div>
+    <div class="compare-row"><div class="cr-cell label">CRM-verified trips</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Self-reported only</div><div class="cr-cell mm"><span style="font-size:.7rem;font-weight:700;background:#f3f0eb;color:#a0927a;border:1px solid #e0d9cc;border-radius:99px;padding:1px 7px;">Coming soon</span> &nbsp;CRM matching — pending approval</div></div>
     <div class="compare-row"><div class="cr-cell label">Multi-stop daily routes</div><div class="cr-cell"><span class="cr-partial">~</span> &nbsp;Shows start and end points only</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;Full leg-by-leg route per day</div></div>
     <div class="compare-row"><div class="cr-cell label">Company policy applied automatically</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Manual calculation required</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;Deductions calculated per your rules</div></div>
     <div class="compare-row"><div class="cr-cell label">Privacy — no 24/7 location tracking</div><div class="cr-cell"><span class="cr-no">✗</span> &nbsp;Always-on background GPS</div><div class="cr-cell mm"><span class="cr-yes">✓</span> &nbsp;No GPS. No background tracking. Ever.</div></div>
@@ -746,10 +750,13 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
             <div class="cc-info"><div class="cc-name">Google Calendar</div><div class="cc-desc">sam.mcguire@spothopperapp.com · 56 events found</div></div>
             <span class="cc-badge b-connected" id="gcal-badge">✓ Connected</span>
           </div>
-          <div class="cc" id="cc-hubspot" onclick="toggleCC('hubspot')">
+          <div class="cc cc-locked" style="opacity:.7;cursor:default;pointer-events:none;">
             <div class="cc-icon">🟠</div>
-            <div class="cc-info"><div class="cc-name">HubSpot CRM</div><div class="cc-desc">Verify meetings against CRM contacts &amp; deals</div></div>
-            <span class="cc-badge b-opt" id="hubspot-badge">Optional</span>
+            <div class="cc-info">
+              <div class="cc-name">HubSpot CRM <span style="font-size:.65rem;font-weight:700;background:#f3f0eb;color:#a0927a;border:1.5px solid #e0d9cc;border-radius:99px;padding:2px 8px;margin-left:.4rem;vertical-align:middle;letter-spacing:.03em;">COMING SOON</span></div>
+              <div class="cc-desc">CRM verification — pending HR &amp; compliance approval</div>
+            </div>
+            <span class="cc-badge b-opt" style="opacity:.5;">Locked</span>
           </div>
           <div class="panel-footer">
             <span style="font-size:.77rem;color:var(--ink4)">Google Calendar already connected</span>
@@ -1110,7 +1117,7 @@ function renderReport(days) {
     card.dataset.search=(day.label+' '+day.legs.map(l=>l.toName+' '+l.toAddr).join(' ')).toLowerCase();
 
     const legsHtml=day.legs.map((leg,i)=>{
-      const hsBadge = leg.hubspotVerified ? `<span class="hs-badge"><svg viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>CRM</span>` : '';
+      const hsBadge = '';
       return `
       <div class="leg${i%2===1?' alt':''}">
         <div class="leg-num" style="grid-column:1">${i+1}</div>
@@ -1246,10 +1253,10 @@ function renderCalendar(days) {
         dayData.legs.forEach(leg => {
           if (leg.isReturn) return;
           const m = document.createElement('div');
-          m.className = 'cal-meeting' + (leg.hubspotVerified ? ' verified' : '');
+          m.className = 'cal-meeting';
           const time = leg.meetingTime ? new Date(leg.meetingTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : '';
-          const hsIcon = leg.hubspotVerified ? `<svg width="7" height="7" viewBox="0 0 8 8" fill="none" style="flex-shrink:0"><path d="M1.5 4l2 2 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
-          m.innerHTML = `${hsIcon}<span class="cal-meeting-name" title="${esc(leg.toLabel)}">${esc(leg.toLabel)}</span>`;
+          const hsIcon = '';
+          m.innerHTML = `<span class="cal-meeting-name" title="${esc(leg.toLabel)}">${esc(leg.toLabel)}</span>`;
           if (time) { const t = document.createElement('span'); t.style.cssText='font-size:.6rem;color:inherit;opacity:.7;flex-shrink:0'; t.textContent=time; m.appendChild(t); }
           cell.appendChild(m);
         });
