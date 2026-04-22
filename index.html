@@ -402,7 +402,39 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
 .pw-error{font-size:.8rem;color:#c0392b;margin-top:.625rem;min-height:1.2em}
 .pw-footer{font-size:.74rem;color:var(--ink4);margin-top:1.5rem}
 
-/* Print */
+/* ── HubSpot verified badge ── */
+.hs-badge{display:inline-flex;align-items:center;gap:3px;font-size:.6rem;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);border-radius:99px;padding:2px 7px;letter-spacing:.01em;flex-shrink:0;margin-left:.35rem;vertical-align:middle}
+.hs-badge svg{width:8px;height:8px;flex-shrink:0}
+
+/* ── View toggle ── */
+.view-toggle{display:flex;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:3px;gap:2px;flex-shrink:0}
+.vt-btn{padding:5px 13px;border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--ink3);transition:all .15s;display:flex;align-items:center;gap:.35rem}
+.vt-btn.active{background:white;color:var(--ink);box-shadow:0 1px 4px rgba(26,23,20,.1)}
+.vt-btn:hover:not(.active){color:var(--ink)}
+
+/* ── Calendar view ── */
+.cal-view{display:none}
+.cal-view.active{display:block}
+.list-view{display:block}
+.list-view.hidden{display:none}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(26,23,20,.07)}
+.cal-dow{background:var(--rpt-hdr-bg);color:rgba(255,255,255,.65);font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding:.55rem 0;font-weight:600}
+.cal-cell{min-height:90px;border-right:1px solid var(--border);border-top:1px solid var(--border);padding:.5rem .45rem;background:white;position:relative;vertical-align:top}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell.empty{background:var(--paper)}
+.cal-cell.has-data{background:white;cursor:default}
+.cal-cell.out-month{background:var(--paper);opacity:.5}
+.cal-date{font-size:.72rem;font-weight:700;color:var(--ink3);margin-bottom:.35rem;line-height:1}
+.cal-cell.has-data .cal-date{color:var(--ink)}
+.cal-meeting{font-size:.67rem;font-weight:500;color:var(--ink2);background:var(--signal-bg);border:1px solid var(--signal-bd);border-radius:5px;padding:2px 5px;margin-bottom:2px;line-height:1.35;display:flex;align-items:center;gap:3px;overflow:hidden}
+.cal-meeting.verified{background:var(--green-bg);border-color:var(--green-bd);color:#1e5c38}
+.cal-meeting.ret{background:var(--cream);border-color:var(--border);color:var(--ink4)}
+.cal-meeting-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.cal-day-total{font-size:.65rem;font-weight:700;color:var(--rpt-amt-color);margin-top:.3rem;font-variant-numeric:tabular-nums}
+.cal-day-zero{font-size:.65rem;color:var(--ink4);margin-top:.3rem}
+
+@media(max-width:900px){.view-toggle{display:none}.cal-grid{grid-template-columns:repeat(7,1fr)}}
+
 @media print{
   #pw-gate{display:none!important}
   .land-nav,.app-nav,.rsidebar,.sbar,.rpt-controls,.btn-app-flat,.nav-cta{display:none!important}
@@ -812,8 +844,18 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
             <div class="rpt-meta" id="rpt-meta">—</div>
           </div>
           <div class="rpt-controls">
-            <button class="ctrl-btn" onclick="expandAll()">Expand all</button>
-            <button class="ctrl-btn" onclick="collapseAll()">Collapse all</button>
+            <div class="view-toggle">
+              <button class="vt-btn active" id="vt-list" onclick="setView('list')">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="0" y="1" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="0" y="5" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="0" y="9" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
+                List
+              </button>
+              <button class="vt-btn" id="vt-cal" onclick="setView('cal')">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="0" y="0" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".4"/><rect x="6.5" y="0" width="5.5" height="5.5" rx="1" fill="currentColor"/><rect x="0" y="6.5" width="5.5" height="5.5" rx="1" fill="currentColor"/><rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity=".4"/></svg>
+                Calendar
+              </button>
+            </div>
+            <button class="ctrl-btn" id="btn-expand-all" onclick="expandAll()">Expand all</button>
+            <button class="ctrl-btn" id="btn-collapse-all" onclick="collapseAll()">Collapse all</button>
           </div>
         </div>
 
@@ -826,6 +868,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
           </div>
         </div>
 
+        <div class="list-view" id="list-view">
         <!-- Column headers -->
         <div class="tbl-col-hdr">
           <div class="col-h" style="grid-column:1/3">Day &amp; Route</div>
@@ -844,6 +887,11 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
           <div class="gt-rmi" id="gt-rmi">—</div>
           <div class="gt-amt" id="gt-amt">—</div>
         </div>
+        </div><!-- /list-view -->
+
+        <div class="cal-view" id="cal-view">
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
       </main>
     </div>
   </div>
@@ -854,7 +902,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
 
 <script>
 // ══ LIVE CALENDAR DATA ══
-const EVENTS = [{"id":"c8q6cdpl","title":"Meeting with Pablo, Owner at Fattoria E Mare","start":"2026-03-23T14:00","date":"2026-03-23","location":"315 Main St, Half Moon Bay, CA 94019"},{"id":"6oojad32","title":"Meeting with Sara, Owner at Westlake Coffee Shop","start":"2026-03-24T11:00","date":"2026-03-24","location":"1901 Junipero Serra Blvd, Daly City, CA 94014"},{"id":"ccpjiahl","title":"Meeting with Cansel, Owner at Esnaf Restaurant","start":"2026-03-24T14:00","date":"2026-03-24","location":"1105 San Carlos Ave, San Carlos, CA 94070"},{"id":"6pijcdpn","title":"Meeting with Zach, DOO of VIN","start":"2026-03-26T15:00","date":"2026-03-26","location":"881 4th St, San Rafael, CA 94901"},{"id":"74r3gcb6","title":"Meeting with Julio, Owner at Hakashi","start":"2026-03-26T17:30","date":"2026-03-26","location":"474 3rd St, San Francisco, CA 94107"},{"id":"6kojcpho","title":"Meeting with Joe, Owner at Maya Palenque","start":"2026-03-27T10:00","date":"2026-03-27","location":"349 Enfrente Rd, Novato, CA 94949"},{"id":"5tpvu4k2","title":"Pop in at Golden Gate Bistro","start":"2026-03-27T10:30","date":"2026-03-27","location":"7380 Redwood Blvd, Novato, CA 94945"},{"id":"ir1b91l0","title":"Popped into SF Brewing Co","start":"2026-03-27T12:00","date":"2026-03-27","location":"3150 Polk St, San Francisco, CA 94109"},{"id":"69h62ob1","title":"Meeting with Yohan, Owner at The Press","start":"2026-03-30T15:00","date":"2026-03-30","location":"107 Sevilla Ave, El Granada, CA 94019"},{"id":"cosj8pb6","title":"Meeting w/ Diego DOO of Tamalpie","start":"2026-03-30T19:30","date":"2026-03-30","location":"477 Miller Ave, Mill Valley, CA 94941"},{"id":"huvupgv4","title":"Brioche Bakery Pop-In","start":"2026-03-31T09:45","date":"2026-03-31","location":"1640 Haight St, San Francisco, CA 94117"},{"id":"11dplc47","title":"HOLD FOR MEETING: Park Station","start":"2026-03-31T15:00","date":"2026-03-31","location":"1200 Park St, Alameda, CA 94501"},{"id":"6hijge1o","title":"Meeting w/ Sasha from Park Station","start":"2026-03-31T15:00","date":"2026-03-31","location":"1200 Park St, Alameda, CA 94501"},{"id":"cpgmcdb2","title":"Meeting with Jett, Owner at Nikon Thai SF","start":"2026-03-31T17:00","date":"2026-03-31","location":"639 Clement St, San Francisco, CA 94118"},{"id":"ccqmad34","title":"Meeting with Ryan, Owner at Ghost Town Brewing","start":"2026-03-31T19:30","date":"2026-03-31","location":"3506 MacArthur Blvd, Oakland, CA 94619"},{"id":"70rj2d9m","title":"Meeting with Harry, Owner at Pronto Pizza","start":"2026-04-01T14:00","date":"2026-04-01","location":"798 Eddy St, San Francisco, CA 94109"},{"id":"7mj4vq96","title":"Working from RICHMOND DISTRICT SF TODAY","start":"2026-04-02T00:00","date":"2026-04-02","location":"Inner Richmond, San Francisco, CA 94118"},{"id":"d8a48hdu","title":"Signing w/ Edson at Brioche","start":"2026-04-02T10:00","date":"2026-04-02","location":"210 Columbus Ave, San Francisco, CA 94133"},{"id":"6kq66chg","title":"Meeting with Igor, Owner of Iggy's Place","start":"2026-04-02T11:30","date":"2026-04-02","location":"3519 Balboa St, San Francisco, CA 94121"},{"id":"64oj8phg","title":"Meeting with Peter, Owner at Pyeong Change Tofu","start":"2026-04-02T13:30","date":"2026-04-02","location":"1269 University Ave, Berkeley, CA 94702"},{"id":"015djb2s","title":"MuuKaTa Pop In","start":"2026-04-02T14:00","date":"2026-04-02","location":"4217 Geary Blvd, San Francisco, CA 94118"},{"id":"7e0o9gc7","title":"Pho Hung Sang Pop-In","start":"2026-04-02T14:15","date":"2026-04-02","location":"239 Clement St, San Francisco, CA 94118"},{"id":"71gjgd1n","title":"Meeting with Owner of Muguboka Restaurant","start":"2026-04-02T16:00","date":"2026-04-02","location":"401 Balboa St, San Francisco, CA 94118"},{"id":"75h30e33","title":"Meeting with Emre, Owner of Lokma","start":"2026-04-02T16:00","date":"2026-04-02","location":"1801 Clement St, San Francisco, CA 94121"},{"id":"6ssj8ob2","title":"Meeting with Giuseppe, Owner of Corks","start":"2026-04-02T17:00","date":"2026-04-02","location":"4342 California St, San Francisco, CA 94118"},{"id":"ccs30cr1","title":"Meeting with Wangche, Owner at Himalayan Kitchen","start":"2026-04-03T12:30","date":"2026-04-03","location":"227 3rd St, San Rafael, CA 94901"},{"id":"corjac1h","title":"Meeting with Abdullah, Owner at Chico's Pizza","start":"2026-04-03T14:30","date":"2026-04-03","location":"131 6th St, San Francisco, CA 94103"},{"id":"64rj4c9k","title":"The Sandwich Spot Menlo Park - Photoshoot","start":"2026-04-06T10:00","date":"2026-04-06","location":"35 Alejandra Avenue, Atherton, CA 94063"},{"id":"cgpjcd9p","title":"Meeting with Paul, Owner at Fradelizio's","start":"2026-04-06T16:30","date":"2026-04-06","location":"35 Broadway, Fairfax, CA 94930"},{"id":"c8o30php","title":"Meeting with AE, Owner at Taylor St Coffee","start":"2026-04-07T11:00","date":"2026-04-07","location":"375 Taylor St, San Francisco, CA 94102"},{"id":"70s62or1","title":"Meeting with Reza, Owner at SF Wraps","start":"2026-04-07T14:30","date":"2026-04-07","location":"255 Kearny St, San Francisco, CA 94108"},{"id":"ckq3ed9k","title":"Meeting w/ Sim, Owner at Peetza Pints & Pies","start":"2026-04-07T14:30","date":"2026-04-07","location":"7011 Sunne Ln, Walnut Creek, CA 94597"},{"id":"64s3cc1n","title":"Meeting with Natale, Co-owner at Servino Ristorante","start":"2026-04-07T16:00","date":"2026-04-07","location":"114 Main St, Belvedere, CA 94920"},{"id":"64ojic1j","title":"Meeting with Lisa, Owner at Kitti's Place","start":"2026-04-08T14:00","date":"2026-04-08","location":"3001 Bridgeway, Sausalito, CA 94965"},{"id":"6dhm2cr1","title":"Meeting with Fatima, Owner at Cafe Arrivederci","start":"2026-04-08T16:00","date":"2026-04-08","location":"11 G St, San Rafael, CA 94901"},{"id":"8mntq0or","title":"Pop-in at The Peasant's Courtyard","start":"2026-04-09T13:30","date":"2026-04-09","location":"3195 Danville Blvd, Alamo, CA 94507"},{"id":"233u7egp","title":"Photo/Video Shoot for Last Drop Tavern","start":"2026-04-09T15:00","date":"2026-04-09","location":"550 Powell St, San Francisco, CA 94108"},{"id":"65ij8opo","title":"Meeting w/ David, Owner of Massimo Restaurant","start":"2026-04-09T15:00","date":"2026-04-09","location":"1604 Locust St, Walnut Creek, CA 94596"},{"id":"chim2d36","title":"Meeting w/ John, Owner at Nonni's Bistro","start":"2026-04-09T16:30","date":"2026-04-09","location":"425 Main St, Pleasanton, CA 94566"},{"id":"45ntak0g","title":"Check-in w/ Yemeni Kabab","start":"2026-04-10T11:30","date":"2026-04-10","location":"39 Taylor St, San Francisco, CA 94102"},{"id":"6cq32e9g","title":"Meeting with Brian, Owner at Fifty Vara","start":"2026-04-10T15:00","date":"2026-04-10","location":"1735 Noriega St, San Francisco, CA 94122"},{"id":"6grj0dhg","title":"Meeting w/ Ken/Anna, Owners at Eagle Pizzeria","start":"2026-04-10T16:30","date":"2026-04-10","location":"1712 Taraval St, San Francisco, CA 94116"},{"id":"61j3iohk","title":"Meeting with Adam, Owner of Manakish Oven & Grill","start":"2026-04-13T11:00","date":"2026-04-13","location":"2905 N Main St, Walnut Creek, CA 94597"},{"id":"0ivo1qck","title":"Pop-in Torsap Thai","start":"2026-04-13T12:45","date":"2026-04-13","location":"1388 Locust St, Walnut Creek, CA 94596"},{"id":"cgqj4e1i","title":"Meeting with Justin, DOO of Burma 2","start":"2026-04-13T15:00","date":"2026-04-13","location":"1616 N Main St, Walnut Creek, CA 94596"},{"id":"71hj4ob3","title":"Meeting with Shannon, Owner of 1515 Restaurant","start":"2026-04-13T16:00","date":"2026-04-13","location":"1515 N Main St, Walnut Creek, CA 94596"},{"id":"6kqmcp1p","title":"Meeting with Vik, Owner of Methi Walnut Creek","start":"2026-04-14T11:00","date":"2026-04-14","location":"1251 S California Blvd, Walnut Creek, CA 94596"},{"id":"68sjedb4","title":"Meeting with Srini, Owner of Balaji Mess","start":"2026-04-14T14:00","date":"2026-04-14","location":"5400 Sunol Blvd, Pleasanton, CA 94566"},{"id":"69gjgp9k","title":"Meeting with Aaron, Owner of Vally Medlyn's","start":"2026-04-15T13:00","date":"2026-04-15","location":"330 Hartz Ave, Danville, CA 94526"},{"id":"60qjec1i","title":"Follow Up Meeting with Jon, Nonni's Bistro","start":"2026-04-15T14:30","date":"2026-04-15","location":"425 Main St, Pleasanton, CA 94566"},{"id":"j7js2c5s","title":"Hold for FU w/ Jon @ Nonni's Bistro","start":"2026-04-15T14:30","date":"2026-04-15","location":"425 Main St, Pleasanton, CA 94566"},{"id":"6sp66cho","title":"Meeting with Darrin, Owner of Tiki Tom's","start":"2026-04-15T18:00","date":"2026-04-15","location":"1535 Olympic Blvd, Walnut Creek, CA 94596"},{"id":"c5hjgd1g","title":"Meeting with VJ, Owner of Danville Kitchens","start":"2026-04-16T11:00","date":"2026-04-16","location":"9000 Crow Canyon Rd, Danville, CA 94506"},{"id":"c4pm6cpg","title":"Meeting with Miguel, Owner at Flatiron","start":"2026-04-17T10:00","date":"2026-04-17","location":"718 B St, San Rafael, CA 94901"},{"id":"2np4o6s1","title":"Photo/Video Shoot for Moki's Sushi","start":"2026-04-17T16:00","date":"2026-04-17","location":"615 Cortland Ave, San Francisco, CA 94110"},{"id":"c5i3gp36","title":"Meeting w/ Josh, GM of Sam's Anchor Cafe","start":"2026-04-20T12:30","date":"2026-04-20","location":"27 Main St, Tiburon, CA 94920"}];
+const EVENTS = [{"id":"c8q6cdpl","title":"Meeting with Pablo, Owner at Fattoria E Mare","start":"2026-03-23T14:00","date":"2026-03-23","location":"315 Main St, Half Moon Bay, CA 94019","hubspotVerified":true},{"id":"6oojad32","title":"Meeting with Sara, Owner at Westlake Coffee Shop","start":"2026-03-24T11:00","date":"2026-03-24","location":"1901 Junipero Serra Blvd, Daly City, CA 94014","hubspotVerified":true},{"id":"ccpjiahl","title":"Meeting with Cansel, Owner at Esnaf Restaurant","start":"2026-03-24T14:00","date":"2026-03-24","location":"1105 San Carlos Ave, San Carlos, CA 94070","hubspotVerified":true},{"id":"6pijcdpn","title":"Meeting with Zach, DOO of VIN","start":"2026-03-26T15:00","date":"2026-03-26","location":"881 4th St, San Rafael, CA 94901","hubspotVerified":true},{"id":"74r3gcb6","title":"Meeting with Julio, Owner at Hakashi","start":"2026-03-26T17:30","date":"2026-03-26","location":"474 3rd St, San Francisco, CA 94107","hubspotVerified":true},{"id":"6kojcpho","title":"Meeting with Joe, Owner at Maya Palenque","start":"2026-03-27T10:00","date":"2026-03-27","location":"349 Enfrente Rd, Novato, CA 94949","hubspotVerified":true},{"id":"5tpvu4k2","title":"Pop in at Golden Gate Bistro","start":"2026-03-27T10:30","date":"2026-03-27","location":"7380 Redwood Blvd, Novato, CA 94945","hubspotVerified":false},{"id":"ir1b91l0","title":"Popped into SF Brewing Co","start":"2026-03-27T12:00","date":"2026-03-27","location":"3150 Polk St, San Francisco, CA 94109","hubspotVerified":false},{"id":"69h62ob1","title":"Meeting with Yohan, Owner at The Press","start":"2026-03-30T15:00","date":"2026-03-30","location":"107 Sevilla Ave, El Granada, CA 94019","hubspotVerified":true},{"id":"cosj8pb6","title":"Meeting w/ Diego DOO of Tamalpie","start":"2026-03-30T19:30","date":"2026-03-30","location":"477 Miller Ave, Mill Valley, CA 94941","hubspotVerified":true},{"id":"huvupgv4","title":"Brioche Bakery Pop-In","start":"2026-03-31T09:45","date":"2026-03-31","location":"1640 Haight St, San Francisco, CA 94117","hubspotVerified":false},{"id":"11dplc47","title":"HOLD FOR MEETING: Park Station","start":"2026-03-31T15:00","date":"2026-03-31","location":"1200 Park St, Alameda, CA 94501","hubspotVerified":false},{"id":"6hijge1o","title":"Meeting w/ Sasha from Park Station","start":"2026-03-31T15:00","date":"2026-03-31","location":"1200 Park St, Alameda, CA 94501","hubspotVerified":true},{"id":"cpgmcdb2","title":"Meeting with Jett, Owner at Nikon Thai SF","start":"2026-03-31T17:00","date":"2026-03-31","location":"639 Clement St, San Francisco, CA 94118","hubspotVerified":true},{"id":"ccqmad34","title":"Meeting with Ryan, Owner at Ghost Town Brewing","start":"2026-03-31T19:30","date":"2026-03-31","location":"3506 MacArthur Blvd, Oakland, CA 94619","hubspotVerified":true},{"id":"70rj2d9m","title":"Meeting with Harry, Owner at Pronto Pizza","start":"2026-04-01T14:00","date":"2026-04-01","location":"798 Eddy St, San Francisco, CA 94109","hubspotVerified":true},{"id":"7mj4vq96","title":"Working from RICHMOND DISTRICT SF TODAY","start":"2026-04-02T00:00","date":"2026-04-02","location":"Inner Richmond, San Francisco, CA 94118","hubspotVerified":false},{"id":"d8a48hdu","title":"Signing w/ Edson at Brioche","start":"2026-04-02T10:00","date":"2026-04-02","location":"210 Columbus Ave, San Francisco, CA 94133","hubspotVerified":true},{"id":"6kq66chg","title":"Meeting with Igor, Owner of Iggy's Place","start":"2026-04-02T11:30","date":"2026-04-02","location":"3519 Balboa St, San Francisco, CA 94121","hubspotVerified":true},{"id":"64oj8phg","title":"Meeting with Peter, Owner at Pyeong Change Tofu","start":"2026-04-02T13:30","date":"2026-04-02","location":"1269 University Ave, Berkeley, CA 94702","hubspotVerified":false},{"id":"015djb2s","title":"MuuKaTa Pop In","start":"2026-04-02T14:00","date":"2026-04-02","location":"4217 Geary Blvd, San Francisco, CA 94118","hubspotVerified":false},{"id":"7e0o9gc7","title":"Pho Hung Sang Pop-In","start":"2026-04-02T14:15","date":"2026-04-02","location":"239 Clement St, San Francisco, CA 94118","hubspotVerified":false},{"id":"71gjgd1n","title":"Meeting with Owner of Muguboka Restaurant","start":"2026-04-02T16:00","date":"2026-04-02","location":"401 Balboa St, San Francisco, CA 94118","hubspotVerified":false},{"id":"75h30e33","title":"Meeting with Emre, Owner of Lokma","start":"2026-04-02T16:00","date":"2026-04-02","location":"1801 Clement St, San Francisco, CA 94121","hubspotVerified":false},{"id":"6ssj8ob2","title":"Meeting with Giuseppe, Owner of Corks","start":"2026-04-02T17:00","date":"2026-04-02","location":"4342 California St, San Francisco, CA 94118","hubspotVerified":true},{"id":"ccs30cr1","title":"Meeting with Wangche, Owner at Himalayan Kitchen","start":"2026-04-03T12:30","date":"2026-04-03","location":"227 3rd St, San Rafael, CA 94901","hubspotVerified":true},{"id":"corjac1h","title":"Meeting with Abdullah, Owner at Chico's Pizza","start":"2026-04-03T14:30","date":"2026-04-03","location":"131 6th St, San Francisco, CA 94103","hubspotVerified":true},{"id":"64rj4c9k","title":"The Sandwich Spot Menlo Park - Photoshoot","start":"2026-04-06T10:00","date":"2026-04-06","location":"35 Alejandra Avenue, Atherton, CA 94063","hubspotVerified":false},{"id":"cgpjcd9p","title":"Meeting with Paul, Owner at Fradelizio's","start":"2026-04-06T16:30","date":"2026-04-06","location":"35 Broadway, Fairfax, CA 94930","hubspotVerified":true},{"id":"c8o30php","title":"Meeting with AE, Owner at Taylor St Coffee","start":"2026-04-07T11:00","date":"2026-04-07","location":"375 Taylor St, San Francisco, CA 94102","hubspotVerified":true},{"id":"70s62or1","title":"Meeting with Reza, Owner at SF Wraps","start":"2026-04-07T14:30","date":"2026-04-07","location":"255 Kearny St, San Francisco, CA 94108","hubspotVerified":true},{"id":"ckq3ed9k","title":"Meeting w/ Sim, Owner at Peetza Pints & Pies","start":"2026-04-07T14:30","date":"2026-04-07","location":"7011 Sunne Ln, Walnut Creek, CA 94597","hubspotVerified":false},{"id":"64s3cc1n","title":"Meeting with Natale, Co-owner at Servino Ristorante","start":"2026-04-07T16:00","date":"2026-04-07","location":"114 Main St, Belvedere, CA 94920","hubspotVerified":true},{"id":"64ojic1j","title":"Meeting with Lisa, Owner at Kitti's Place","start":"2026-04-08T14:00","date":"2026-04-08","location":"3001 Bridgeway, Sausalito, CA 94965","hubspotVerified":true},{"id":"6dhm2cr1","title":"Meeting with Fatima, Owner at Cafe Arrivederci","start":"2026-04-08T16:00","date":"2026-04-08","location":"11 G St, San Rafael, CA 94901","hubspotVerified":true},{"id":"8mntq0or","title":"Pop-in at The Peasant's Courtyard","start":"2026-04-09T13:30","date":"2026-04-09","location":"3195 Danville Blvd, Alamo, CA 94507","hubspotVerified":false},{"id":"233u7egp","title":"Photo/Video Shoot for Last Drop Tavern","start":"2026-04-09T15:00","date":"2026-04-09","location":"550 Powell St, San Francisco, CA 94108","hubspotVerified":false},{"id":"65ij8opo","title":"Meeting w/ David, Owner of Massimo Restaurant","start":"2026-04-09T15:00","date":"2026-04-09","location":"1604 Locust St, Walnut Creek, CA 94596","hubspotVerified":true},{"id":"chim2d36","title":"Meeting w/ John, Owner at Nonni's Bistro","start":"2026-04-09T16:30","date":"2026-04-09","location":"425 Main St, Pleasanton, CA 94566","hubspotVerified":true},{"id":"45ntak0g","title":"Check-in w/ Yemeni Kabab","start":"2026-04-10T11:30","date":"2026-04-10","location":"39 Taylor St, San Francisco, CA 94102","hubspotVerified":false},{"id":"6cq32e9g","title":"Meeting with Brian, Owner at Fifty Vara","start":"2026-04-10T15:00","date":"2026-04-10","location":"1735 Noriega St, San Francisco, CA 94122","hubspotVerified":true},{"id":"6grj0dhg","title":"Meeting w/ Ken/Anna, Owners at Eagle Pizzeria","start":"2026-04-10T16:30","date":"2026-04-10","location":"1712 Taraval St, San Francisco, CA 94116","hubspotVerified":true},{"id":"61j3iohk","title":"Meeting with Adam, Owner of Manakish Oven & Grill","start":"2026-04-13T11:00","date":"2026-04-13","location":"2905 N Main St, Walnut Creek, CA 94597","hubspotVerified":true},{"id":"0ivo1qck","title":"Pop-in Torsap Thai","start":"2026-04-13T12:45","date":"2026-04-13","location":"1388 Locust St, Walnut Creek, CA 94596","hubspotVerified":false},{"id":"cgqj4e1i","title":"Meeting with Justin, DOO of Burma 2","start":"2026-04-13T15:00","date":"2026-04-13","location":"1616 N Main St, Walnut Creek, CA 94596","hubspotVerified":true},{"id":"71hj4ob3","title":"Meeting with Shannon, Owner of 1515 Restaurant","start":"2026-04-13T16:00","date":"2026-04-13","location":"1515 N Main St, Walnut Creek, CA 94596","hubspotVerified":true},{"id":"6kqmcp1p","title":"Meeting with Vik, Owner of Methi Walnut Creek","start":"2026-04-14T11:00","date":"2026-04-14","location":"1251 S California Blvd, Walnut Creek, CA 94596","hubspotVerified":true},{"id":"68sjedb4","title":"Meeting with Srini, Owner of Balaji Mess","start":"2026-04-14T14:00","date":"2026-04-14","location":"5400 Sunol Blvd, Pleasanton, CA 94566","hubspotVerified":false},{"id":"69gjgp9k","title":"Meeting with Aaron, Owner of Vally Medlyn's","start":"2026-04-15T13:00","date":"2026-04-15","location":"330 Hartz Ave, Danville, CA 94526","hubspotVerified":true},{"id":"60qjec1i","title":"Follow Up Meeting with Jon, Nonni's Bistro","start":"2026-04-15T14:30","date":"2026-04-15","location":"425 Main St, Pleasanton, CA 94566","hubspotVerified":false},{"id":"j7js2c5s","title":"Hold for FU w/ Jon @ Nonni's Bistro","start":"2026-04-15T14:30","date":"2026-04-15","location":"425 Main St, Pleasanton, CA 94566","hubspotVerified":false},{"id":"6sp66cho","title":"Meeting with Darrin, Owner of Tiki Tom's","start":"2026-04-15T18:00","date":"2026-04-15","location":"1535 Olympic Blvd, Walnut Creek, CA 94596","hubspotVerified":false},{"id":"c5hjgd1g","title":"Meeting with VJ, Owner of Danville Kitchens","start":"2026-04-16T11:00","date":"2026-04-16","location":"9000 Crow Canyon Rd, Danville, CA 94506","hubspotVerified":true},{"id":"c4pm6cpg","title":"Meeting with Miguel, Owner at Flatiron","start":"2026-04-17T10:00","date":"2026-04-17","location":"718 B St, San Rafael, CA 94901","hubspotVerified":true},{"id":"2np4o6s1","title":"Photo/Video Shoot for Moki's Sushi","start":"2026-04-17T16:00","date":"2026-04-17","location":"615 Cortland Ave, San Francisco, CA 94110","hubspotVerified":false},{"id":"c5i3gp36","title":"Meeting w/ Josh, GM of Sam's Anchor Cafe","start":"2026-04-20T12:30","date":"2026-04-20","location":"27 Main St, Tiburon, CA 94920","hubspotVerified":true}];
 
 // ══ DISTANCES (Google Maps, pre-calculated) ══
 const DIST = {"30 Central Dr, Mill Valley, CA 94941|315 Main St, Half Moon Bay, CA 94019":33.2,"315 Main St, Half Moon Bay, CA 94019|30 Central Dr, Mill Valley, CA 94941":33.2,"30 Central Dr, Mill Valley, CA 94941|1901 Junipero Serra Blvd, Daly City, CA 94014":20.8,"1901 Junipero Serra Blvd, Daly City, CA 94014|1105 San Carlos Ave, San Carlos, CA 94070":14.4,"1105 San Carlos Ave, San Carlos, CA 94070|30 Central Dr, Mill Valley, CA 94941":28.9,"30 Central Dr, Mill Valley, CA 94941|881 4th St, San Rafael, CA 94901":6.7,"881 4th St, San Rafael, CA 94901|474 3rd St, San Francisco, CA 94107":14.8,"474 3rd St, San Francisco, CA 94107|30 Central Dr, Mill Valley, CA 94941":14.4,"30 Central Dr, Mill Valley, CA 94941|349 Enfrente Rd, Novato, CA 94949":16.3,"349 Enfrente Rd, Novato, CA 94949|30 Central Dr, Mill Valley, CA 94941":14.8,"30 Central Dr, Mill Valley, CA 94941|107 Sevilla Ave, El Granada, CA 94019":36.4,"107 Sevilla Ave, El Granada, CA 94019|477 Miller Ave, Mill Valley, CA 94941":27.1,"477 Miller Ave, Mill Valley, CA 94941|30 Central Dr, Mill Valley, CA 94941":1.2,"30 Central Dr, Mill Valley, CA 94941|1200 Park St, Alameda, CA 94501":24.0,"1200 Park St, Alameda, CA 94501|639 Clement St, San Francisco, CA 94118":17.9,"639 Clement St, San Francisco, CA 94118|3506 MacArthur Blvd, Oakland, CA 94619":12.8,"3506 MacArthur Blvd, Oakland, CA 94619|30 Central Dr, Mill Valley, CA 94941":24.5,"30 Central Dr, Mill Valley, CA 94941|798 Eddy St, San Francisco, CA 94109":15.1,"798 Eddy St, San Francisco, CA 94109|30 Central Dr, Mill Valley, CA 94941":15.1,"30 Central Dr, Mill Valley, CA 94941|210 Columbus Ave, San Francisco, CA 94133":14.3,"210 Columbus Ave, San Francisco, CA 94133|3519 Balboa St, San Francisco, CA 94121":4.8,"3519 Balboa St, San Francisco, CA 94121|1269 University Ave, Berkeley, CA 94702":14.1,"1269 University Ave, Berkeley, CA 94702|401 Balboa St, San Francisco, CA 94118":16.2,"401 Balboa St, San Francisco, CA 94118|1801 Clement St, San Francisco, CA 94121":0.8,"1801 Clement St, San Francisco, CA 94121|4342 California St, San Francisco, CA 94118":0.5,"4342 California St, San Francisco, CA 94118|30 Central Dr, Mill Valley, CA 94941":14.1,"30 Central Dr, Mill Valley, CA 94941|227 3rd St, San Rafael, CA 94901":6.7,"227 3rd St, San Rafael, CA 94901|131 6th St, San Francisco, CA 94103":16.4,"131 6th St, San Francisco, CA 94103|30 Central Dr, Mill Valley, CA 94941":14.5,"30 Central Dr, Mill Valley, CA 94941|35 Broadway, Fairfax, CA 94930":8.0,"35 Broadway, Fairfax, CA 94930|30 Central Dr, Mill Valley, CA 94941":8.0,"30 Central Dr, Mill Valley, CA 94941|375 Taylor St, San Francisco, CA 94102":15.2,"375 Taylor St, San Francisco, CA 94102|255 Kearny St, San Francisco, CA 94108":0.7,"255 Kearny St, San Francisco, CA 94108|7011 Sunne Ln, Walnut Creek, CA 94597":34.8,"7011 Sunne Ln, Walnut Creek, CA 94597|114 Main St, Belvedere, CA 94920":27.9,"114 Main St, Belvedere, CA 94920|30 Central Dr, Mill Valley, CA 94941":10.2,"30 Central Dr, Mill Valley, CA 94941|3001 Bridgeway, Sausalito, CA 94965":7.9,"3001 Bridgeway, Sausalito, CA 94965|11 G St, San Rafael, CA 94901":7.2,"11 G St, San Rafael, CA 94901|30 Central Dr, Mill Valley, CA 94941":7.0,"30 Central Dr, Mill Valley, CA 94941|1604 Locust St, Walnut Creek, CA 94596":38.0,"1604 Locust St, Walnut Creek, CA 94596|425 Main St, Pleasanton, CA 94566":16.9,"425 Main St, Pleasanton, CA 94566|30 Central Dr, Mill Valley, CA 94941":48.4,"30 Central Dr, Mill Valley, CA 94941|39 Taylor St, San Francisco, CA 94102":15.2,"39 Taylor St, San Francisco, CA 94102|1735 Noriega St, San Francisco, CA 94122":3.6,"1735 Noriega St, San Francisco, CA 94122|1712 Taraval St, San Francisco, CA 94116":0.5,"1712 Taraval St, San Francisco, CA 94116|30 Central Dr, Mill Valley, CA 94941":14.9,"30 Central Dr, Mill Valley, CA 94941|2905 N Main St, Walnut Creek, CA 94597":37.4,"2905 N Main St, Walnut Creek, CA 94597|1616 N Main St, Walnut Creek, CA 94596":1.0,"1616 N Main St, Walnut Creek, CA 94596|1515 N Main St, Walnut Creek, CA 94596":0.1,"1515 N Main St, Walnut Creek, CA 94596|30 Central Dr, Mill Valley, CA 94941":37.4,"30 Central Dr, Mill Valley, CA 94941|1251 S California Blvd, Walnut Creek, CA 94596":37.2,"1251 S California Blvd, Walnut Creek, CA 94596|5400 Sunol Blvd, Pleasanton, CA 94566":14.8,"5400 Sunol Blvd, Pleasanton, CA 94566|30 Central Dr, Mill Valley, CA 94941":48.1,"30 Central Dr, Mill Valley, CA 94941|330 Hartz Ave, Danville, CA 94526":42.1,"330 Hartz Ave, Danville, CA 94526|425 Main St, Pleasanton, CA 94566":10.2,"425 Main St, Pleasanton, CA 94566|1535 Olympic Blvd, Walnut Creek, CA 94596":15.8,"1535 Olympic Blvd, Walnut Creek, CA 94596|30 Central Dr, Mill Valley, CA 94941":37.2,"30 Central Dr, Mill Valley, CA 94941|9000 Crow Canyon Rd, Danville, CA 94506":42.8,"9000 Crow Canyon Rd, Danville, CA 94506|30 Central Dr, Mill Valley, CA 94941":42.2,"30 Central Dr, Mill Valley, CA 94941|718 B St, San Rafael, CA 94901":6.7,"718 B St, San Rafael, CA 94901|30 Central Dr, Mill Valley, CA 94941":6.7,"30 Central Dr, Mill Valley, CA 94941|27 Main St, Tiburon, CA 94920":9.1,"27 Main St, Tiburon, CA 94920|30 Central Dr, Mill Valley, CA 94941":9.5};
@@ -1009,7 +1057,9 @@ function buildRoutes(evts) {
         toLabel:   isReturn ? 'Home' : cleanTitle(thisMtg.title),
         toAddr:    stops[i+1],
         miles:     mi,
-        isReturn
+        isReturn,
+        hubspotVerified: !isReturn && thisMtg ? !!thisMtg.hubspotVerified : false,
+        meetingTime: !isReturn && thisMtg ? thisMtg.start : null
       });
     }
     const rmi=Math.max(0,total-S.ded*2);
@@ -1037,18 +1087,21 @@ function renderReport(days) {
     card.dataset.total=day.dayTotal;
     card.dataset.search=(day.label+' '+day.legs.map(l=>l.toName+' '+l.toAddr).join(' ')).toLowerCase();
 
-    const legsHtml=day.legs.map((leg,i)=>`
+    const legsHtml=day.legs.map((leg,i)=>{
+      const hsBadge = leg.hubspotVerified ? `<span class="hs-badge"><svg viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>CRM</span>` : '';
+      return `
       <div class="leg${i%2===1?' alt':''}">
         <div class="leg-num" style="grid-column:1">${i+1}</div>
         <div class="leg-info">
           <div class="leg-from">↗ <span style="font-size:.69rem;color:var(--ink3);font-style:italic">${esc(leg.fromLabel)}</span></div>
-          <div class="leg-to">${esc(leg.toLabel)}</div>
+          <div class="leg-to">${esc(leg.toLabel)}${hsBadge}</div>
           <div class="leg-addr">${esc(leg.toAddr)}</div>
         </div>
         <div class="leg-mi">${f1(leg.miles)}</div>
         <div></div><div></div><div></div>
         <div style="text-align:right"><span class="leg-tag ${leg.isReturn?'tag-ret':'tag-mtg'}">${leg.isReturn?'Return':'Meeting'}</span></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     const exclHtml=day.excluded.length?`<div class="excl-row"><strong>Excluded (${day.excluded.length}):</strong> ${day.excluded.map(e=>esc(e.title.split(',')[0])).join(' · ')}</div>`:'';
 
@@ -1089,7 +1142,121 @@ function renderReport(days) {
   document.getElementById('app-nav-meta').textContent=fmD(sd)+' – '+fmD(ed);
 }
 
-// ══ INTERACTIONS ══
+// ══ VIEW TOGGLE ══
+function setView(v) {
+  const isList = v === 'list';
+  document.getElementById('list-view').classList.toggle('hidden', !isList);
+  document.getElementById('cal-view').classList.toggle('active', !isList);
+  document.getElementById('vt-list').classList.toggle('active', isList);
+  document.getElementById('vt-cal').classList.toggle('active', !isList);
+  document.getElementById('btn-expand-all').style.display = isList ? '' : 'none';
+  document.getElementById('btn-collapse-all').style.display = isList ? '' : 'none';
+  if (!isList && S.reportDays && S.reportDays.length) renderCalendar(S.reportDays);
+}
+
+function renderCalendar(days) {
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Build lookup of date -> day data
+  const byDate = {};
+  days.forEach(d => byDate[d.date] = d);
+
+  // Figure out the month range to display
+  const start = new Date(S.start + 'T12:00:00');
+  const end   = new Date(S.end   + 'T12:00:00');
+
+  // We'll render month by month
+  const months = [];
+  let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (cur <= end) {
+    months.push(new Date(cur));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DOWS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  months.forEach((monthStart, mi) => {
+    const year  = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+
+    // Month header
+    const mhdr = document.createElement('div');
+    mhdr.style.cssText = 'grid-column:1/-1;padding:.75rem 1rem .5rem;font-family:\'Instrument Serif\',Georgia,serif;font-size:1.1rem;font-weight:400;color:var(--ink);letter-spacing:-.02em;background:var(--cream);border-bottom:1px solid var(--border);' + (mi > 0 ? 'border-top:1.5px solid var(--border2);' : '');
+    mhdr.textContent = MONTHS[month] + ' ' + year;
+    grid.appendChild(mhdr);
+
+    // Day-of-week headers
+    DOWS.forEach(dow => {
+      const cell = document.createElement('div');
+      cell.className = 'cal-dow';
+      cell.textContent = dow;
+      grid.appendChild(cell);
+    });
+
+    // Blank cells before first of month
+    const firstDow = new Date(year, month, 1).getDay();
+    for (let i = 0; i < firstDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'cal-cell empty';
+      grid.appendChild(blank);
+    }
+
+    // Days of month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dayData = byDate[dateStr];
+      const cell = document.createElement('div');
+      const isInRange = dateStr >= S.start && dateStr <= S.end;
+
+      cell.className = 'cal-cell' + (dayData ? ' has-data' : '') + (!isInRange ? ' out-month' : '');
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'cal-date';
+      dateEl.textContent = d;
+      cell.appendChild(dateEl);
+
+      if (dayData) {
+        // Render each leg (meetings only, not return)
+        dayData.legs.forEach(leg => {
+          if (leg.isReturn) return;
+          const m = document.createElement('div');
+          m.className = 'cal-meeting' + (leg.hubspotVerified ? ' verified' : '');
+          const time = leg.meetingTime ? new Date(leg.meetingTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : '';
+          const hsIcon = leg.hubspotVerified ? `<svg width="7" height="7" viewBox="0 0 8 8" fill="none" style="flex-shrink:0"><path d="M1.5 4l2 2 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+          m.innerHTML = `${hsIcon}<span class="cal-meeting-name" title="${esc(leg.toLabel)}">${esc(leg.toLabel)}</span>`;
+          if (time) { const t = document.createElement('span'); t.style.cssText='font-size:.6rem;color:inherit;opacity:.7;flex-shrink:0'; t.textContent=time; m.appendChild(t); }
+          cell.appendChild(m);
+        });
+
+        // Day total
+        const tot = document.createElement('div');
+        if (dayData.reimbAmt > 0) {
+          tot.className = 'cal-day-total';
+          tot.textContent = f1(dayData.dayTotal) + ' mi · ' + fm(dayData.reimbAmt);
+        } else {
+          tot.className = 'cal-day-zero';
+          tot.textContent = f1(dayData.dayTotal) + ' mi · $0';
+        }
+        cell.appendChild(tot);
+      }
+
+      grid.appendChild(cell);
+    }
+
+    // Trailing blanks to complete last row
+    const lastDow = new Date(year, month, daysInMonth).getDay();
+    for (let i = lastDow + 1; i < 7; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'cal-cell empty';
+      grid.appendChild(blank);
+    }
+  });
+}
+
+
 function toggleDay(hdr){const c=hdr.closest('.day-card');c.classList.toggle('open');c.classList.toggle('closed');}
 function expandAll(){document.querySelectorAll('.day-card').forEach(c=>{c.classList.add('open');c.classList.remove('closed');});}
 function collapseAll(){document.querySelectorAll('.day-card').forEach(c=>{c.classList.remove('open');c.classList.add('closed');});}
