@@ -407,6 +407,10 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
   .day-hdr-label{grid-column:1}
 }
 </style>
+  <!-- jsPDF + SheetJS for client-side export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -735,8 +739,9 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);padding:2rem 2.5rem;disp
         <hr class="rs-divider">
         <div>
           <div class="rs-lbl">Export</div>
-          <button class="exp-btn ep" onclick="exportCSV()"><span>📄</span> Download CSV</button>
-          <button class="exp-btn" onclick="exportPrint()"><span>🖨️</span> Print / Save PDF</button>
+          <button class="exp-btn ep" onclick="exportPDF()"><span>📄</span> Download PDF</button>
+          <button class="exp-btn" onclick="exportXLSX()"><span>📊</span> Download Excel</button>
+          <button class="exp-btn" onclick="exportCSV()"><span>📋</span> Download CSV</button>
           <button class="exp-btn eg" onclick="submitToHR()"><span>✉️</span> Submit to HR</button>
         </div>
         <hr class="rs-divider">
@@ -1023,68 +1028,280 @@ function collapseAll(){document.querySelectorAll('.day-card').forEach(c=>{c.clas
 function searchReport(q){const lq=q.toLowerCase();document.querySelectorAll('.day-card').forEach(c=>{const h=!lq||c.dataset.search.includes(lq);c.style.display=h?'':'none';if(lq&&h){c.classList.add('open');c.classList.remove('closed');}});}
 function filterChip(el,type){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');const d2=S.ded*2;document.querySelectorAll('.day-card').forEach(c=>{const t=parseFloat(c.dataset.total||0);if(type==='all')c.style.display='';else if(type==='reimb')c.style.display=t>d2?'':'none';else if(type==='big')c.style.display=t>50?'':'none';});}
 
-// ══ EXPORT ══
-function exportCSV() {
+// ══ PDF EXPORT — matches Mileage_Report_Final.pdf exactly ══
+function exportPDF() {
   if(!S.reportDays||!S.reportDays.length){toast('⚠️ Generate a report first');return;}
-  const rows=[
-    ['Milemaker — Mileage Report'],
-    [`Period: ${S.start} to ${S.end}`],
-    [`Start Address: ${S.home}`],
-    [`Rate: $${S.rate.toFixed(2)}/mile`],
-    [`Home Deduction: ${S.ded} mi each way (${S.ded*2} mi/day)`],
-    [`Generated: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`],
-    [],
-    ['Date','Day','Leg #','From','From Address','To','To Address','Leg Miles','Day Total Miles','Policy Deduction (mi)','Reimbursable Miles','Reimbursement Amount']
-  ];
-  let gMi=0,gRmi=0,gAmt=0;
-  S.reportDays.forEach(day=>{
-    gMi+=day.dayTotal; gRmi+=day.reimbMi; gAmt+=day.reimbAmt;
-    day.legs.forEach((leg,i)=>{
-      rows.push([
-        day.date, day.label, i+1,
-        leg.fromName, leg.fromAddr,
-        leg.toName,   leg.toAddr,
-        leg.miles.toFixed(1),
-        i===0 ? day.dayTotal.toFixed(1)  : '',
-        i===0 ? (S.ded*2).toFixed(1)     : '',
-        i===0 ? day.reimbMi.toFixed(1)   : '',
-        i===0 ? '$'+day.reimbAmt.toFixed(2) : ''
+  toast('⏳ Building PDF…');
+  setTimeout(function(){
+    var doc = new jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+    var PW = doc.internal.pageSize.getWidth();
+    var DARK_BLUE=[31,78,121], MED_BLUE=[46,117,182], DAY_HDR=[44,62,80];
+    var GREEN=[31,107,58], GREEN_BG=[198,239,206], LIGHT_BLUE=[213,232,247];
+    var RED=[170,0,0], WHITE=[255,255,255], ALT=[245,249,255];
+    var ded2 = S.ded*2;
+    var gMi=0,gRmi=0,gAmt=0;
+    S.reportDays.forEach(function(d){gMi+=d.dayTotal;gRmi+=d.reimbMi;gAmt+=d.reimbAmt;});
+    var n = S.reportDays.length;
+
+    // ── TITLE BLOCK ──
+    doc.setFillColor.apply(doc,DARK_BLUE); doc.rect(28,28,PW-56,18,'F');
+    doc.setTextColor.apply(doc,WHITE); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('MILEAGE REIMBURSEMENT REPORT', PW/2, 40, {align:'center'});
+
+    doc.setFillColor.apply(doc,MED_BLUE); doc.rect(28,46,PW-56,13,'F');
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Period: '+S.start+' to '+S.end+'  |  Start: '+S.home+'  |  Rate: $'+S.rate.toFixed(2)+'/mile', PW/2, 54.5, {align:'center'});
+
+    doc.setFillColor.apply(doc,MED_BLUE); doc.rect(28,59,PW-56,11,'F');
+    doc.setFontSize(7);
+    doc.text('SpotHopper Policy: '+ded2+' mi/day non-reimbursable ('+S.ded+' mi each way from home). Pop-ins & photoshoots excluded.', PW/2, 67, {align:'center'});
+
+    // ── MAIN TABLE ──
+    var tableBody = [];
+    S.reportDays.forEach(function(day){
+      // Day header row
+      tableBody.push([
+        {content: day.label.toUpperCase(), colSpan:9,
+         styles:{fillColor:DAY_HDR,textColor:WHITE,fontStyle:'bold',fontSize:8,cellPadding:3}}
+      ]);
+      // Leg rows
+      day.legs.forEach(function(leg,i){
+        tableBody.push([
+          {content:day.date,                          styles:{fontSize:7,halign:'center'}},
+          {content:'Leg '+(i+1),                      styles:{fontSize:7,halign:'center',fontStyle:'bold'}},
+          {content:leg.fromName+'\n'+leg.fromAddr,    styles:{fontSize:6.5,cellWidth:110}},
+          {content:leg.toName+'\n'+leg.toAddr,        styles:{fontSize:6.5,cellWidth:110}},
+          {content:leg.miles.toFixed(1),              styles:{fontSize:7,halign:'center'}},
+          {content:'',styles:{}},
+          {content:'',styles:{}},
+          {content:'',styles:{}},
+          {content:'',styles:{}}
+        ]);
+      });
+      // Day total row
+      var pos = day.reimbAmt > 0;
+      tableBody.push([
+        {content:'',styles:{fillColor:LIGHT_BLUE}},
+        {content:'',styles:{fillColor:LIGHT_BLUE}},
+        {content:'',styles:{fillColor:LIGHT_BLUE}},
+        {content:'DAY TOTAL — '+day.label, styles:{fillColor:LIGHT_BLUE,fontStyle:'bold',fontSize:7,textColor:[31,78,121],halign:'right'}},
+        {content:day.dayTotal.toFixed(1), styles:{fillColor:LIGHT_BLUE,fontStyle:'bold',fontSize:7,halign:'center'}},
+        {content:day.dayTotal.toFixed(1)+' mi', styles:{fillColor:LIGHT_BLUE,fontStyle:'bold',fontSize:7,halign:'center'}},
+        {content:'('+ded2.toFixed(1)+')', styles:{fillColor:LIGHT_BLUE,fontSize:7,textColor:RED,fontStyle:'italic',halign:'right'}},
+        {content:day.reimbMi.toFixed(1), styles:{fillColor:LIGHT_BLUE,fontStyle:'bold',fontSize:7,textColor:[31,78,121],halign:'center'}},
+        {content:'$'+day.reimbAmt.toFixed(2), styles:{fillColor:GREEN_BG,fontStyle:'bold',fontSize:8,textColor:GREEN,halign:'right'}}
       ]);
     });
-    if(day.excluded&&day.excluded.length){
-      rows.push(['','','','EXCLUDED: '+day.excluded.map(e=>e.title).join('; '),'','','','','','','','']);
-    }
+    // Grand total
+    tableBody.push([
+      {content:'GRAND TOTAL', colSpan:2, styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'left'}},
+      {content:'All '+n+' days, Mon–Fri, '+S.start+' – '+S.end, colSpan:2, styles:{fillColor:DARK_BLUE,textColor:[200,220,255],fontSize:7}},
+      {content:gMi.toFixed(1), styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:gMi.toFixed(1), styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:'('+ded2*n+')', styles:{fillColor:DARK_BLUE,textColor:[255,180,180],fontStyle:'bold',fontSize:9,halign:'right'}},
+      {content:gRmi.toFixed(1), styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:'$'+gAmt.toFixed(2), styles:{fillColor:[20,90,40],textColor:WHITE,fontStyle:'bold',fontSize:10,halign:'right'}}
+    ]);
+
+    doc.autoTable({
+      head:[[
+        {content:'Date',styles:{halign:'center'}},
+        {content:'Leg',styles:{halign:'center'}},
+        'From','To',
+        {content:'Leg\nMiles',styles:{halign:'center'}},
+        {content:'Day Total\nMi',styles:{halign:'center'}},
+        {content:'Policy\nDeduct',styles:{halign:'center'}},
+        {content:'Reimb\nMiles',styles:{halign:'center'}},
+        {content:'Reimb\nAmount',styles:{halign:'right'}}
+      ]],
+      body: tableBody,
+      startY: 72,
+      margin:{left:28,right:28},
+      columnStyles:{
+        0:{cellWidth:48}, 1:{cellWidth:30},
+        2:{cellWidth:110}, 3:{cellWidth:110},
+        4:{cellWidth:40}, 5:{cellWidth:48},
+        6:{cellWidth:46}, 7:{cellWidth:46}, 8:{cellWidth:58}
+      },
+      headStyles:{fillColor:MED_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:7.5,cellPadding:3,minCellHeight:22},
+      bodyStyles:{fontSize:7,cellPadding:2.5,minCellHeight:8,valign:'top'},
+      alternateRowStyles:{fillColor:WHITE},
+      rowPageBreak:'auto',
+      showHead:'everyPage',
+      didParseCell: function(data){
+        if(data.row.raw && data.row.raw[0] && typeof data.row.raw[0]==='object' && data.row.raw[0].colSpan===9){
+          data.cell.styles.fillColor = DAY_HDR;
+        }
+      }
+    });
+
+    // ── SUMMARY TABLE ──
+    var sumY = doc.lastAutoTable.finalY + 14;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc,DARK_BLUE);
+    doc.text('Summary by Day', 28, sumY);
+    var sumBody = S.reportDays.map(function(day){
+      return [
+        {content:day.label, styles:{fontSize:8}},
+        {content:day.dayTotal.toFixed(1), styles:{halign:'center',fontSize:8}},
+        {content:'('+ded2.toFixed(1)+')', styles:{halign:'center',fontSize:8,textColor:RED,fontStyle:'italic'}},
+        {content:day.reimbMi.toFixed(1), styles:{halign:'center',fontSize:8,textColor:[31,78,121],fontStyle:'bold'}},
+        {content:'$'+day.reimbAmt.toFixed(2), styles:{halign:'right',fontSize:8,textColor:GREEN,fontStyle:'bold'}}
+      ];
+    });
+    sumBody.push([
+      {content:'TOTAL',styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:gMi.toFixed(1),styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:'('+ded2*n+')',styles:{fillColor:DARK_BLUE,textColor:[255,180,180],fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:gRmi.toFixed(1),styles:{fillColor:DARK_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center'}},
+      {content:'$'+gAmt.toFixed(2),styles:{fillColor:[20,90,40],textColor:WHITE,fontStyle:'bold',fontSize:10,halign:'right'}}
+    ]);
+    doc.autoTable({
+      head:[[
+        'Day',
+        {content:'Total Miles Driven',styles:{halign:'center'}},
+        {content:'Policy Deduction',styles:{halign:'center'}},
+        {content:'Reimbursable Miles',styles:{halign:'center'}},
+        {content:'Reimbursement Amount',styles:{halign:'right'}}
+      ]],
+      body: sumBody,
+      startY: sumY+5,
+      margin:{left:28,right:28},
+      columnStyles:{0:{cellWidth:160},1:{cellWidth:90},2:{cellWidth:90},3:{cellWidth:100},4:{cellWidth:110}},
+      headStyles:{fillColor:MED_BLUE,textColor:WHITE,fontStyle:'bold',fontSize:8,cellPadding:4},
+      bodyStyles:{fontSize:8,cellPadding:3},
+      alternateRowStyles:{fillColor:ALT}
+    });
+
+    // Footer note
+    var noteY = doc.lastAutoTable.finalY + 10;
+    doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(100,100,100);
+    doc.text('* Pop-ins and photo/video shoots excluded. '+ded2+' mi/day deducted per SpotHopper policy ('+S.ded+' mi each way). Days under '+ded2+' total miles = $0 reimbursable.', 28, noteY);
+
+    doc.save('Mileage_Report_'+S.start+'_to_'+S.end+'.pdf');
+    toast('📄 PDF downloaded — matches the Mileage_Report_Final format!');
+  }, 100);
+}
+
+// ══ EXCEL EXPORT — matches Mileage_Report_Final.xlsx exactly ══
+function exportXLSX() {
+  if(!S.reportDays||!S.reportDays.length){toast('⚠️ Generate a report first');return;}
+  toast('⏳ Building Excel file…');
+  setTimeout(function(){
+    var wb = XLSX.utils.book_new();
+    var ded2 = S.ded*2;
+    var gMi=0,gRmi=0,gAmt=0;
+    S.reportDays.forEach(function(d){gMi+=d.dayTotal;gRmi+=d.reimbMi;gAmt+=d.reimbAmt;});
+    var n = S.reportDays.length;
+
+    // ── Sheet 1: Daily Route Detail ──
+    var ws1data = [];
+    // Title rows
+    ws1data.push(['MILEAGE REIMBURSEMENT REPORT','','','','','','','','']);
+    ws1data.push(['Period: '+S.start+' – '+S.end+'   |   Start: '+S.home+'   |   Rate: $'+S.rate.toFixed(2)+'/mile','','','','','','','','']);
+    ws1data.push(['SpotHopper Policy: '+ded2+' mi/day non-reimbursable ('+S.ded+' mi each way from home). Pop-ins & photoshoots excluded.','','','','','','','','']);
+    ws1data.push(['Date','Leg #','From','To','Leg Miles','Day Total Mi','Policy Deduct','Reimb Miles','Reimb Amount']);
+
+    S.reportDays.forEach(function(day){
+      // Day header
+      ws1data.push([day.label.toUpperCase(),'','','','','','','','']);
+      // Legs
+      day.legs.forEach(function(leg,i){
+        ws1data.push([
+          day.date, 'Leg '+(i+1),
+          leg.fromName+'\n'+leg.fromAddr,
+          leg.toName+'\n'+leg.toAddr,
+          parseFloat(leg.miles.toFixed(1)),
+          i===0 ? parseFloat(day.dayTotal.toFixed(1)) : '',
+          i===0 ? -ded2 : '',
+          i===0 ? parseFloat(day.reimbMi.toFixed(1)) : '',
+          i===0 ? parseFloat(day.reimbAmt.toFixed(2)) : ''
+        ]);
+      });
+      // Day total
+      ws1data.push(['','','','DAY TOTAL — '+day.label,
+        parseFloat(day.dayTotal.toFixed(1)),
+        day.dayTotal.toFixed(1)+' mi',
+        -ded2,
+        parseFloat(day.reimbMi.toFixed(1)),
+        parseFloat(day.reimbAmt.toFixed(2))
+      ]);
+      ws1data.push([]); // spacer
+    });
+    // Grand total
+    ws1data.push(['GRAND TOTAL — All '+n+' Days','','','',
+      parseFloat(gMi.toFixed(1)),
+      parseFloat(gMi.toFixed(1)),
+      -(ded2*n),
+      parseFloat(gRmi.toFixed(1)),
+      parseFloat(gAmt.toFixed(2))
+    ]);
+
+    var ws1 = XLSX.utils.aoa_to_sheet(ws1data);
+    ws1['!cols'] = [{wch:14},{wch:7},{wch:40},{wch:40},{wch:11},{wch:13},{wch:13},{wch:13},{wch:15}];
+
+    // ── Sheet 2: Summary by Day ──
+    var ws2data = [];
+    ws2data.push(['MILEAGE REIMBURSEMENT — SUMMARY BY DAY','','','','']);
+    ws2data.push(['SpotHopper Policy: '+ded2+' mi/day deducted ('+S.ded+' mi each way). Rate: $'+S.rate.toFixed(2)+'/mile. Pop-ins & photoshoots excluded.','','','','']);
+    ws2data.push(['Day','Total Miles Driven','Policy Deduction','Reimbursable Miles','Reimbursement Amount']);
+    S.reportDays.forEach(function(day){
+      ws2data.push([day.label, parseFloat(day.dayTotal.toFixed(1)), -ded2, parseFloat(day.reimbMi.toFixed(1)), parseFloat(day.reimbAmt.toFixed(2))]);
+    });
+    ws2data.push(['TOTAL', parseFloat(gMi.toFixed(1)), -(ded2*n), parseFloat(gRmi.toFixed(1)), parseFloat(gAmt.toFixed(2))]);
+    ws2data.push([]);
+    ws2data.push(['* Pop-ins and photo/video shoots excluded. '+ded2+' mi/day deducted. Days under '+ded2+' total miles = $0 reimbursable.']);
+
+    var ws2 = XLSX.utils.aoa_to_sheet(ws2data);
+    ws2['!cols'] = [{wch:32},{wch:18},{wch:18},{wch:18},{wch:20}];
+
+    XLSX.utils.book_append_sheet(wb, ws1, 'Daily Route Detail');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Summary by Day');
+    XLSX.writeFile(wb, 'Mileage_Report_'+S.start+'_to_'+S.end+'.xlsx');
+    toast('📊 Excel downloaded — two sheets, same format as PDF!');
+  }, 100);
+}
+
+function exportCSV() {
+  if(!S.reportDays||!S.reportDays.length){toast('⚠️ Generate a report first');return;}
+  var ded2=S.ded*2; var gMi=0,gRmi=0,gAmt=0;
+  S.reportDays.forEach(function(d){gMi+=d.dayTotal;gRmi+=d.reimbMi;gAmt+=d.reimbAmt;});
+  var rows=[];
+  rows.push(['MILEAGE REIMBURSEMENT REPORT','','','','','','','','']);
+  rows.push(['Period: '+S.start+' to '+S.end+'  |  Start: '+S.home+'  |  Rate: $'+S.rate.toFixed(2)+'/mile','','','','','','','','']);
+  rows.push(['SpotHopper Policy: '+ded2+' mi/day non-reimbursable. Pop-ins & photoshoots excluded.','','','','','','','','']);
+  rows.push([]);
+  rows.push(['Date','Leg #','From','From Address','To','To Address','Leg Miles','Day Total Mi','Policy Deduct','Reimb Miles','Reimb Amount']);
+  S.reportDays.forEach(function(day){
+    rows.push([day.label.toUpperCase(),'','','','','','','','','','']);
+    day.legs.forEach(function(leg,i){
+      rows.push([day.date,'Leg '+(i+1),leg.fromName,leg.fromAddr,leg.toName,leg.toAddr,
+        leg.miles.toFixed(1),
+        i===0?day.dayTotal.toFixed(1):'',
+        i===0?'('+ded2.toFixed(1)+')':'',
+        i===0?day.reimbMi.toFixed(1):'',
+        i===0?'$'+day.reimbAmt.toFixed(2):''
+      ]);
+    });
+    rows.push(['','','','','','','DAY TOTAL',day.dayTotal.toFixed(1)+' mi','('+ded2+')',day.reimbMi.toFixed(1),'$'+day.reimbAmt.toFixed(2)]);
     rows.push([]);
   });
-  rows.push(['TOTALS','','','','','','',
-    '', gMi.toFixed(1), (S.ded*2*S.reportDays.length).toFixed(1),
-    gRmi.toFixed(1), '$'+gAmt.toFixed(2)
-  ]);
-  const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');
+  rows.push(['GRAND TOTAL — '+S.reportDays.length+' Days','','','','','',gMi.toFixed(1)+' mi',gMi.toFixed(1),'('+(ded2*S.reportDays.length)+')',gRmi.toFixed(1),'$'+gAmt.toFixed(2)]);
+  rows.push([]);
+  rows.push(['SUMMARY BY DAY']); rows.push(['Day','Total Miles','Policy Deduction','Reimb Miles','Amount']);
+  S.reportDays.forEach(function(day){rows.push([day.label,day.dayTotal.toFixed(1),'('+ded2+')',day.reimbMi.toFixed(1),'$'+day.reimbAmt.toFixed(2)]);});
+  rows.push(['TOTAL',gMi.toFixed(1),'('+(ded2*S.reportDays.length)+')',gRmi.toFixed(1),'$'+gAmt.toFixed(2)]);
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`milemaker_report_${S.start}_to_${S.end}.csv`;
-  a.click();
-  toast('📄 CSV downloaded — open in Excel or Google Sheets!');
+  a.download='Mileage_Report_'+S.start+'_to_'+S.end+'.csv'; a.click();
+  toast('📋 CSV downloaded!');
 }
 
 function exportPrint(){
   if(!S.reportDays||!S.reportDays.length){toast('⚠️ Generate a report first');return;}
-  // Make sure app overlay is open and report is showing
   document.getElementById('app-overlay').classList.add('open');
-  showAppScreen('report');
-  expandAll();
-  // Small delay so DOM renders fully before print dialog
-  setTimeout(()=>{
-    window.print();
-    toast('🖨️ Print dialog opened — choose "Save as PDF" to download');
-  },350);
-}
-
-function submitToHR(){
-  if(!S.reportDays||!S.reportDays.length){toast('⚠️ Generate a report first');return;}
-  const gAmt=S.reportDays.reduce((a,d)=>a+d.reimbAmt,0);
-  toast(`✉️ Report submitted to HR — $${gAmt.toFixed(2)} reimbursement pending approval`);
+  showAppScreen('report'); expandAll();
+  setTimeout(function(){ window.print(); toast('🖨️ Print dialog opened'); }, 350);
 }
 
 // ══ PROCESSING STEPS ══
